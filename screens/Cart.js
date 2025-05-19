@@ -148,22 +148,35 @@ export default function Cart({ navigation, route }) {
   };
 
   const addProduct = async () => {
+    console.log('Add Product pressed');
+    console.log('New Product values:', newProduct);
     try {
       if (!newProduct.name || !newProduct.price || !newProduct.description || !newProduct.stock) {
         Alert.alert('Error', 'Please fill in all fields');
+        console.log('Validation failed: missing fields');
         return;
       }
 
-      const { error } = await supabase
+      setLoading(true);
+      const { data, error } = await supabase
         .from('products')
-        .insert([{
-          name: newProduct.name,
-          price: parseFloat(newProduct.price),
-          description: newProduct.description,
-          stock: parseInt(newProduct.stock)
-        }]);
+        .insert([
+          {
+            name: newProduct.name,
+            price: parseFloat(newProduct.price),
+            description: newProduct.description,
+            stock: parseInt(newProduct.stock)
+          }
+        ]);
+      setLoading(false);
 
-      if (error) throw error;
+      console.log('Supabase insert result:', { data, error });
+
+      if (error) {
+        Alert.alert('Error', error.message || 'Failed to add product');
+        console.log('Supabase error:', error);
+        return;
+      }
 
       setNewProduct({
         name: '',
@@ -173,8 +186,11 @@ export default function Cart({ navigation, route }) {
       });
       fetchProducts();
       Alert.alert('Success', 'Product added successfully');
+      console.log('Product added successfully');
     } catch (error) {
-      Alert.alert('Error', 'Failed to add product');
+      setLoading(false);
+      Alert.alert('Error', error.message || 'Failed to add product');
+      console.log('Catch error:', error);
     }
   };
 
